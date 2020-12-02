@@ -1,6 +1,55 @@
 module Aoc exposing (..)
 
+import Array
 import Data
+
+
+
+-- 2b / 605
+
+
+current : Int
+current =
+    Data.passwords
+        |> List.filter
+            (\( ( a, b ), char, password ) ->
+                password
+                    |> String.split ""
+                    |> Array.fromList
+                    |> (\arr ->
+                            [ Array.get (a - 1) arr == Just char
+                            , Array.get (b - 1) arr == Just char
+                            ]
+                                |> List.filter identity
+                                |> List.length
+                                |> (==) 1
+                       )
+            )
+        |> List.length
+
+
+
+-- 2a / 556
+
+
+puzzle2_part1 : Int
+puzzle2_part1 =
+    Data.passwords
+        |> List.filterMap
+            (\( ( min, max ), char, password ) ->
+                password
+                    |> String.split ""
+                    |> List.filter ((==) char)
+                    |> List.length
+                    |> (\n ->
+                            if n >= min && n <= max then
+                                Just n
+
+                            else
+                                Nothing
+                       )
+            )
+        |> List.length
 
 
 
@@ -22,10 +71,6 @@ puzzle1_part2 =
             )
         |> List.head
         |> Maybe.withDefault 0
-
-
-p1p2Internal _ _ _ =
-    List.unzip
 
 
 
