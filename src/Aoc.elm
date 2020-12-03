@@ -4,12 +4,67 @@ import Array
 import Data
 
 
+current : Int
+current =
+    day3_part2
+
+
+
+-- 3b / 7560370818
+
+
+day3_part2 =
+    [ ( 1, 1 )
+    , ( 1, 3 )
+    , ( 1, 5 )
+    , ( 1, 7 )
+    , ( 2, 1 )
+    ]
+        |> List.map (\x -> day3_part1 x Data.topology)
+        |> List.foldl (*) 1
+
+
+
+-- 3a / 169
+
+
+day3_part1 : ( Int, Int ) -> List (Array.Array String) -> number
+day3_part1 ( colSkip, rowSkip ) topology =
+    topology
+        |> List.indexedMap
+            (\i n ->
+                if modBy colSkip i == 0 then
+                    Just n
+
+                else
+                    Nothing
+            )
+        |> List.filterMap identity
+        |> List.foldl
+            (\topo ( x, trees ) ->
+                let
+                    next =
+                        modBy (Array.length topo) (x + rowSkip)
+
+                    nextTrees =
+                        if Array.get x topo == Just "#" then
+                            trees + 1
+
+                        else
+                            trees
+                in
+                ( next, nextTrees )
+            )
+            ( 0, 0 )
+        |> Tuple.second
+
+
 
 -- 2b / 605
 
 
-current : Int
-current =
+puzzle2_part2 : Int
+puzzle2_part2 =
     Data.passwords
         |> List.filter
             (\( ( a, b ), char, password ) ->
