@@ -2,11 +2,228 @@ module Aoc exposing (..)
 
 import Array
 import Data
+import Dict
+import Regex
 
 
 current : Int
 current =
-    day3_part2
+    day4_part2
+
+
+
+-- 4a
+
+
+validators =
+    [ ( "byr (Birth Year) - four digits; at least 1920 and at most 2002."
+      , Dict.get "byr"
+            >> Maybe.andThen String.toInt
+            >> Maybe.andThen
+                (\year ->
+                    if year >= 1920 && year <= 2002 then
+                        Just ()
+
+                    else
+                        Nothing
+                )
+      )
+    , ( "iyr (Issue Year) - four digits; at least 2010 and at most 2020."
+      , Dict.get "iyr"
+            >> Maybe.andThen String.toInt
+            >> Maybe.andThen
+                (\year ->
+                    if year >= 2010 && year <= 2020 then
+                        Just ()
+
+                    else
+                        Nothing
+                )
+      )
+    , ( "eyr (Expiration Year) - four digits; at least 2020 and at most 2030."
+      , Dict.get "eyr"
+            >> Maybe.andThen String.toInt
+            >> Maybe.andThen
+                (\year ->
+                    if year >= 2020 && year <= 2030 then
+                        Just ()
+
+                    else
+                        Nothing
+                )
+      )
+    , ( """hgt (Height) - a number followed by either cm or in:
+              If cm, the number must be at least 150 and at most 193.
+              If in, the number must be at least 59 and at most 76."""
+      , Dict.get "hgt"
+            -->> Debug.log "hgt"
+            >> Maybe.andThen
+                (\hgt ->
+                    if String.endsWith "cm" hgt then
+                        hgt
+                            |> String.replace "cm" ""
+                            |> String.toInt
+                            |> Maybe.andThen
+                                (\cm ->
+                                    if cm >= 150 && cm <= 193 then
+                                        Just ()
+
+                                    else
+                                        Nothing
+                                )
+
+                    else if String.endsWith "in" hgt then
+                        hgt
+                            |> String.replace "in" ""
+                            |> String.toInt
+                            |> Maybe.andThen
+                                (\n ->
+                                    if n >= 59 && n <= 76 then
+                                        Just ()
+
+                                    else
+                                        Nothing
+                                )
+
+                    else
+                        Nothing
+                )
+        -->> Debug.log ""
+      )
+    , ( "hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f."
+      , Dict.get "hcl"
+            -->> Debug.log "hcl"
+            >> Maybe.andThen
+                (\hcl ->
+                    let
+                        hclRe =
+                            Regex.fromStringWith { caseInsensitive = True, multiline = True } "\\#[0-9a-f]{6}"
+                                |> Maybe.withDefault Regex.never
+                    in
+                    if Regex.contains hclRe hcl then
+                        Just ()
+
+                    else
+                        Nothing
+                )
+      )
+    , ( "ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth."
+      , Dict.get "ecl"
+            -->> Debug.log "ecl"
+            >> Maybe.andThen
+                (\ecl ->
+                    if List.member ecl [ "amb", "blu", "brn", "gry", "grn", "hzl", "oth" ] then
+                        Just ()
+
+                    else
+                        Nothing
+                )
+      )
+    , ( "pid (Passport ID) - a nine-digit number, including leading zeroes."
+      , Dict.get "pid"
+            -->> Debug.log "pid"
+            >> Maybe.andThen
+                (\pid ->
+                    let
+                        pidRe =
+                            Regex.fromStringWith { caseInsensitive = True, multiline = True } "^[0-9]{9}$"
+                                |> Maybe.withDefault Regex.never
+                    in
+                    if Regex.contains pidRe pid then
+                        Just ()
+
+                    else
+                        Nothing
+                )
+      )
+    ]
+
+
+day4_part2 =
+    Data.passports
+        |> Regex.split splitLines
+        |> List.filterMap
+            (Regex.split splitWhitespace
+                >> List.map (String.split ":")
+                >> List.filterMap
+                    (\x ->
+                        case x of
+                            [ a, b ] ->
+                                Just ( a, b )
+
+                            _ ->
+                                Nothing
+                    )
+                >> Dict.fromList
+                >> (\dict ->
+                        validators
+                            |> List.map Tuple.second
+                            |> List.filterMap (\validate -> validate dict)
+                            |> (\l ->
+                                    if List.length l == 7 then
+                                        Just ()
+
+                                    else
+                                        Nothing
+                               )
+                   )
+            )
+        |> List.length
+
+
+splitLines =
+    Regex.fromStringWith { caseInsensitive = True, multiline = True } "\\n\\s*\\n"
+        |> Maybe.withDefault Regex.never
+
+
+splitWhitespace =
+    Regex.fromStringWith { caseInsensitive = True, multiline = True } "\\s+"
+        |> Maybe.withDefault Regex.never
+
+
+f1 =
+    [ "byr"
+    , "iyr"
+    , "eyr"
+    , "hgt"
+    , "hcl"
+    , "ecl"
+    , "pid"
+
+    --, "cid"
+    ]
+        |> List.sort
+
+
+f2 =
+    [ "byr"
+    , "iyr"
+    , "eyr"
+    , "hgt"
+    , "hcl"
+    , "ecl"
+    , "pid"
+    , "cid"
+    ]
+        |> List.sort
+
+
+
+-- 230
+
+
+day4_part1 =
+    Data.passports
+        |> Regex.split splitLines
+        |> List.map
+            (Regex.split splitWhitespace
+                >> List.map (String.split ":")
+                >> List.filterMap List.head
+                >> List.filter (String.trim >> String.isEmpty >> not)
+                >> List.sort
+            )
+        |> List.filter (\l -> l == f1 || l == f2)
+        |> List.length
 
 
 
