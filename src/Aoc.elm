@@ -8,7 +8,79 @@ import Regex
 
 current : Int
 current =
-    day4_part2
+    day5_part2
+
+
+
+-- 5a
+
+
+day5_part2 =
+    let
+        all =
+            List.range 0 (798 - 1)
+
+        taken =
+            Data.boardingPasses
+                |> List.map (String.split "" >> getSeat)
+
+        free =
+            all
+                |> List.filterMap
+                    (\s ->
+                        if List.member s taken then
+                            Nothing
+
+                        else
+                            Just s
+                    )
+                |> List.reverse
+                |> List.head
+                |> Maybe.withDefault 0
+    in
+    free
+
+
+
+-- 883
+
+
+day5_part1 =
+    Data.boardingPasses
+        |> List.map (String.split "" >> getSeat)
+        |> List.maximum
+        |> Maybe.withDefault 0
+
+
+getSeat : List String -> Int
+getSeat passport =
+    let
+        col =
+            List.foldl
+                (\x xs ->
+                    if x == "F" then
+                        List.take (List.length xs // 2) xs
+
+                    else
+                        List.drop (List.length xs // 2) xs
+                )
+                (List.range 0 127)
+                (List.take 7 passport)
+
+        row =
+            List.foldl
+                (\x xs ->
+                    if x == "L" then
+                        List.take (List.length xs // 2) xs
+
+                    else
+                        List.drop (List.length xs // 2) xs
+                )
+                (List.range 0 7)
+                (List.drop 7 passport)
+    in
+    Maybe.map2 (\c r -> (c * 8) + r) (List.head col) (List.head row)
+        |> Maybe.withDefault 0
 
 
 
