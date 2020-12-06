@@ -4,15 +4,68 @@ import Array
 import Data
 import Dict
 import Regex
+import Set
 
 
 current : Int
 current =
-    day5_part2
+    day6_part2
 
 
 
--- 5a
+--6b
+--3476
+
+
+day6_part2 =
+    Data.customs
+        |> Regex.split splitLines
+        |> List.map
+            (Regex.split splitWhitespace
+                >> List.filterMap nonBlank
+                >> List.map (String.split "" >> Set.fromList)
+            )
+        |> List.map
+            (\sets ->
+                let
+                    intersections =
+                        List.foldl
+                            Set.intersect
+                            (List.head sets |> Maybe.withDefault Set.empty)
+                            (List.drop 1 sets)
+                in
+                Set.size intersections
+            )
+        |> List.sum
+
+
+
+--6a / 6686
+
+
+day6_part1 =
+    Data.customs
+        |> Regex.split splitLines
+        |> List.map
+            (String.split ""
+                >> List.filterMap nonBlank
+                >> Set.fromList
+                >> Set.size
+            )
+        |> List.sum
+
+
+nonBlank str =
+    case String.trim str of
+        "" ->
+            Nothing
+
+        s ->
+            Just s
+
+
+
+-- 5b
 
 
 day5_part2 =
