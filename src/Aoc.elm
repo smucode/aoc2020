@@ -8,9 +8,108 @@ import Regex
 import Set
 
 
-current : Int
+current : Maybe Int
 current =
-    day7_part2
+    day8_part2
+
+
+
+--8b / 758
+
+
+day8_part2 =
+    Data.bootcode
+        |> Array.fromList
+        |> d8p2 0 0 [] False
+
+
+d8p2 ptr acc called nochange codes =
+    if ptr == Array.length codes then
+        Just acc
+
+    else if List.member ptr called then
+        Nothing
+
+    else
+        case Array.get ptr codes of
+            Just ( inst, val ) ->
+                let
+                    nop_ =
+                        d8p2 (ptr + 1) acc (ptr :: called)
+
+                    acc_ =
+                        d8p2 (ptr + 1) (acc + val) (ptr :: called)
+
+                    jmp_ =
+                        d8p2 (ptr + val) acc (ptr :: called)
+                in
+                case inst of
+                    "nop" ->
+                        if nochange then
+                            nop_ nochange codes
+
+                        else
+                            case jmp_ True codes of
+                                Just r ->
+                                    Just r
+
+                                Nothing ->
+                                    nop_ False codes
+
+                    "acc" ->
+                        acc_ nochange codes
+
+                    "jmp" ->
+                        if nochange then
+                            jmp_ nochange codes
+
+                        else
+                            case nop_ True codes of
+                                Just r ->
+                                    Just r
+
+                                Nothing ->
+                                    jmp_ False codes
+
+                    _ ->
+                        Nothing
+
+            Nothing ->
+                Nothing
+
+
+
+--8a / 1594
+
+
+day8_part1 =
+    Data.bootcode
+        |> Array.fromList
+        |> d8p1 0 0 []
+
+
+d8p1 ptr acc called codes =
+    if List.member ptr called then
+        Just acc
+
+    else
+        case Array.get ptr codes of
+            Just ( inst, val ) ->
+                case inst of
+                    "nop" ->
+                        d8p1 (ptr + 1) acc (ptr :: called) codes
+
+                    "acc" ->
+                        d8p1 (ptr + 1) (acc + val) (ptr :: called) codes
+
+                    "jmp" ->
+                        d8p1 (ptr + val) acc (ptr :: called) codes
+
+                    _ ->
+                        Just acc
+
+            Nothing ->
+                Just acc
 
 
 

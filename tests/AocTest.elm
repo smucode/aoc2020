@@ -8,5 +8,5 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "Advent of code"
-        [ test "puzzle" <| \_ -> Expect.equal Aoc.current -1
+        [ test "puzzle" <| \_ -> Expect.equal Aoc.current (Just -1)
         ]
