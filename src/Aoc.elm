@@ -2,14 +2,156 @@ module Aoc exposing (..)
 
 import Array
 import Data
-import Dict
+import Dict exposing (Dict)
+import List.Extra as List
 import Regex
 import Set
 
 
 current : Int
 current =
-    day6_part2
+    day7_part2
+
+
+
+-- 7b
+-- 2431
+
+
+day7_part2 =
+    let
+        bagSplitter =
+            Regex.fromStringWith { caseInsensitive = True, multiline = True } " bags contain "
+                |> Maybe.withDefault Regex.never
+
+        bagMatcher =
+            Regex.fromString "(\\d) ([\\w ]+) bags?"
+                |> Maybe.withDefault Regex.never
+
+        parsed : Dict String (Dict String Int)
+        parsed =
+            Data.bags
+                |> List.map (Regex.splitAtMost 1 bagSplitter)
+                |> List.filterMap
+                    (\list ->
+                        case list of
+                            [ head, tail ] ->
+                                Just
+                                    ( head
+                                    , tail
+                                        |> Regex.find bagMatcher
+                                        |> List.filterMap
+                                            (\{ submatches } ->
+                                                case submatches of
+                                                    [ Just v, Just k ] ->
+                                                        case String.toInt v of
+                                                            Just n ->
+                                                                Just ( k, n )
+
+                                                            Nothing ->
+                                                                Nothing
+
+                                                    _ ->
+                                                        Nothing
+                                            )
+                                        |> Dict.fromList
+                                    )
+
+                            _ ->
+                                Nothing
+                    )
+                |> Dict.fromList
+    in
+    d7p2 [ "shiny gold" ] 0 parsed
+
+
+d7p2 candidates num data =
+    case candidates of
+        candidate :: xs ->
+            case Dict.get candidate data of
+                Just dict ->
+                    let
+                        inner =
+                            dict
+                                |> Dict.toList
+                                |> List.map
+                                    (\( k, n ) ->
+                                        n * d7p2 [ k ] 1 data
+                                    )
+                                |> List.sum
+                    in
+                    d7p2 xs (num + inner) data
+
+                Nothing ->
+                    d7p2 xs num data
+
+        [] ->
+            num
+
+
+
+--7a
+--335
+
+
+day7_part1 =
+    let
+        bagSplitter =
+            Regex.fromStringWith { caseInsensitive = True, multiline = True } " bags contain "
+                |> Maybe.withDefault Regex.never
+
+        bagMatcher =
+            Regex.fromString "\\d ([\\w ]+) bags?"
+                |> Maybe.withDefault Regex.never
+
+        parsed =
+            Data.bags
+                |> List.map (Regex.splitAtMost 1 bagSplitter)
+                |> List.filterMap
+                    (\list ->
+                        case list of
+                            [ head, tail ] ->
+                                Just
+                                    ( head
+                                    , tail
+                                        |> Regex.find bagMatcher
+                                        |> List.concatMap (.submatches >> List.filterMap identity)
+                                    )
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    findInternal [ "shiny gold" ] [] parsed
+        |> List.unique
+        |> List.length
+
+
+findInternal : List String -> List String -> List ( String, List String ) -> List String
+findInternal candidates matches bags =
+    case candidates of
+        [] ->
+            matches
+
+        candidate :: remaindingCandidates ->
+            let
+                ( candicates_, matches_ ) =
+                    List.foldl
+                        (\( bagKey, bagValues ) ( rem_, mat_ ) ->
+                            if List.member candidate bagValues then
+                                if List.member bagKey mat_ then
+                                    ( rem_, mat_ )
+
+                                else
+                                    ( List.unique <| bagKey :: rem_, List.unique <| bagKey :: mat_ )
+
+                            else
+                                ( rem_, mat_ )
+                        )
+                        ( remaindingCandidates, matches )
+                        bags
+            in
+            findInternal candicates_ matches_ bags
 
 
 
