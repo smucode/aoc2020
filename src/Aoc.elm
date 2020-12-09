@@ -10,7 +10,82 @@ import Set
 
 current : Maybe Int
 current =
-    day8_part2
+    day9_part2
+
+
+
+-- 9b / 219202240
+
+
+day9_part2 =
+    d9b_ 0 1
+
+
+invalid =
+    1639024365
+
+
+d9b_ : Int -> Int -> Maybe Int
+d9b_ first last =
+    let
+        slice =
+            Data.xmas
+                |> List.drop first
+                |> List.take (last - first)
+    in
+    case compare (List.sum slice) invalid of
+        EQ ->
+            Maybe.map2 (+) (List.minimum slice) (List.maximum slice)
+
+        GT ->
+            d9b_ (first + 1) (first + 2)
+
+        LT ->
+            d9b_ first (last + 1)
+
+
+
+-- 9a / 1639024365
+
+
+day9_part1 =
+    d9 0
+
+
+d9 offset =
+    let
+        preamble_ =
+            Data.xmas
+                |> List.drop offset
+                |> List.take 25
+                |> (\p ->
+                        zip p p
+                            |> List.map
+                                (\( a, b ) ->
+                                    if a == b then
+                                        -1
+
+                                    else
+                                        a + b
+                                )
+                   )
+
+        num_ =
+            Data.xmas
+                |> List.drop (offset + 25)
+                |> List.head
+    in
+    Data.xmas
+        |> List.drop (offset + 25)
+        |> List.head
+        |> Maybe.andThen
+            (\num ->
+                if List.member num preamble_ then
+                    d9 (offset + 1)
+
+                else
+                    Just num
+            )
 
 
 
