@@ -10,7 +10,95 @@ import Set
 
 current : Maybe Int
 current =
-    day9_part2
+    day10_part2
+
+
+
+-- 10b / 442136281481216
+
+
+day10_part2 =
+    dx2 ( 0, 0 ) Dict.empty
+        |> Tuple.first
+        |> Just
+
+
+type alias Memo =
+    Dict ( Int, Int ) Int
+
+
+dx2 : ( Int, Int ) -> Memo -> ( Int, Memo )
+dx2 ( prev, offset ) memo =
+    case List.drop offset Data.adapters of
+        next :: rest ->
+            if next - prev <= 3 then
+                if List.isEmpty rest then
+                    ( 1, memo )
+
+                else
+                    let
+                        id1 =
+                            ( next, offset + 1 )
+
+                        ( s1, m1 ) =
+                            -- keep going
+                            case Dict.get id1 memo of
+                                Just n ->
+                                    ( n, memo )
+
+                                Nothing ->
+                                    dx2 id1 memo
+
+                        m1_ =
+                            Dict.insert id1 s1 m1
+
+                        id2 =
+                            ( prev, offset + 1 )
+
+                        ( s2, m2 ) =
+                            -- skip one
+                            case Dict.get id2 m1_ of
+                                Just n ->
+                                    ( n, m1_ )
+
+                                Nothing ->
+                                    dx2 id2 m1_
+
+                        m2_ =
+                            Dict.insert id2 s2 m2
+                    in
+                    ( s1 + s2, m2_ )
+
+            else
+                ( 0, memo )
+
+        [] ->
+            ( 1, memo )
+
+
+
+--10a / 2475
+
+
+day10_part1 =
+    let
+        diffs =
+            Data.adapters
+                |> List.sort
+                |> (\adapters ->
+                        List.foldl
+                            (\nxt ( prev, dfs ) ->
+                                ( nxt, dfs ++ [ nxt - prev ] )
+                            )
+                            ( 0, [] )
+                            adapters
+                   )
+    in
+    diffs
+        |> Tuple.second
+        |> List.partition ((==) 1)
+        |> (\( a, b ) -> List.length a * (List.length b + 1))
+        |> Just
 
 
 
