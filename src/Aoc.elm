@@ -10,7 +10,138 @@ import Set
 
 current : Maybe Int
 current =
-    day10_part2
+    day11_part2
+
+
+
+-- 11b
+
+
+day11_part2 =
+    d11b Data.seats 98
+
+
+
+--d11b Data.seatsTest 10
+
+
+d11b seats width =
+    let
+        dirs =
+            [ -1
+            , 1
+            , width + 1
+            , width + 1 - 1
+            , width + 1 + 1
+            , -width - 1
+            , -width - 1 - 1
+            , -width - 1 + 1
+            ]
+
+        occupiedInDirection i d =
+            case Array.get (i + d) seats of
+                Just "." ->
+                    occupiedInDirection (i + d) d
+
+                Just "#" ->
+                    True
+
+                _ ->
+                    False
+
+        numOccupied i =
+            List.filter (\d -> occupiedInDirection i d) dirs
+                |> List.length
+
+        next =
+            Array.indexedMap
+                (\i seat ->
+                    case seat of
+                        "#" ->
+                            if numOccupied i >= 5 then
+                                "L"
+
+                            else
+                                seat
+
+                        "L" ->
+                            if numOccupied i == 0 then
+                                "#"
+
+                            else
+                                seat
+
+                        _ ->
+                            seat
+                )
+                seats
+    in
+    if next == seats then
+        seats
+            |> Array.filter ((==) "#")
+            |> Array.length
+            |> Just
+
+    else
+        d11b next width
+
+
+
+--11a / 2483
+
+
+day11_part1 =
+    d11 Data.seats 98
+
+
+d11 seats width =
+    let
+        free =
+            "L"
+
+        occupied =
+            "#"
+
+        adjacent i =
+            [ i - 1, i + 1, i - width, i - (width + 1), i - (width + 2), i + width, i + (width + 1), i + (width + 2) ]
+                |> List.map (\x -> Array.get x seats)
+
+        numOccupied i =
+            adjacent i
+                |> List.filter ((==) (Just occupied))
+                |> List.length
+
+        next =
+            Array.indexedMap
+                (\i seat ->
+                    case seat of
+                        "#" ->
+                            if numOccupied i >= 4 then
+                                free
+
+                            else
+                                occupied
+
+                        "L" ->
+                            if numOccupied i == 0 then
+                                occupied
+
+                            else
+                                free
+
+                        _ ->
+                            seat
+                )
+                seats
+    in
+    if next == seats then
+        seats
+            |> Array.filter ((==) "#")
+            |> Array.length
+            |> Just
+
+    else
+        d11 next width
 
 
 
