@@ -10,7 +10,129 @@ import Set
 
 current : Maybe Int
 current =
-    day11_part2
+    day12_part2
+
+
+day12_part2 =
+    Data.nav
+        |> List.foldl
+            (\( d, amount ) ( ( north, east ) as wp, ( shipNorth, shipEast ) as ship ) ->
+                case d of
+                    "N" ->
+                        ( ( north + amount, east ), ship )
+
+                    "S" ->
+                        ( ( north - amount, east ), ship )
+
+                    "E" ->
+                        ( ( north, east + amount ), ship )
+
+                    "W" ->
+                        ( ( north, east - amount ), ship )
+
+                    "L" ->
+                        case modBy 4 (amount // 90) of
+                            0 ->
+                                ( ( north, east ), ship )
+
+                            1 ->
+                                ( ( east, -north ), ship )
+
+                            2 ->
+                                ( ( -north, -east ), ship )
+
+                            3 ->
+                                ( ( -east, north ), ship )
+
+                            _ ->
+                                Debug.todo "💥"
+
+                    "R" ->
+                        case modBy 4 (amount // 90) of
+                            0 ->
+                                ( ( north, east ), ship )
+
+                            1 ->
+                                ( ( -east, north ), ship )
+
+                            2 ->
+                                ( ( -north, -east ), ship )
+
+                            3 ->
+                                ( ( east, -north ), ship )
+
+                            _ ->
+                                Debug.todo "💥"
+
+                    "F" ->
+                        ( ( north, east ), ( shipNorth + (north * amount), shipEast + (east * amount) ) )
+
+                    _ ->
+                        ( ( north, east ), ship )
+            )
+            ( ( 1, 10 ), ( 0, 0 ) )
+        |> (\( _, ( north, east ) ) -> abs north + abs east)
+        |> Just
+
+
+
+-- 12a -1710
+
+
+day12_part1 =
+    Data.nav
+        |> List.foldl
+            (\( d, amount ) ( facing, n, e ) ->
+                case d of
+                    "N" ->
+                        ( facing, n + amount, e )
+
+                    "S" ->
+                        ( facing, n - amount, e )
+
+                    "E" ->
+                        ( facing, n, e + amount )
+
+                    "W" ->
+                        ( facing, n, e - amount )
+
+                    "L" ->
+                        ( facing - amount, n, e )
+
+                    "R" ->
+                        ( facing + amount, n, e )
+
+                    "F" ->
+                        if facing == 0 then
+                            ( facing, n, e + amount )
+
+                        else
+                            case modBy 4 (facing // 90) of
+                                0 ->
+                                    -- "E"
+                                    ( facing, n, e + amount )
+
+                                1 ->
+                                    -- "S"
+                                    ( facing, n - amount, e )
+
+                                2 ->
+                                    -- "W"
+                                    ( facing, n, e - amount )
+
+                                3 ->
+                                    -- "N"
+                                    ( facing, n + amount, e )
+
+                                _ ->
+                                    Debug.todo "💥"
+
+                    _ ->
+                        ( facing, n, e )
+            )
+            ( 0, 0, 0 )
+        |> (\( facing, north, east ) -> abs north + abs east)
+        |> Just
 
 
 
