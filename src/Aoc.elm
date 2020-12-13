@@ -10,7 +10,76 @@ import Set
 
 current : Maybe Int
 current =
-    day12_part2
+    day13_part2 Data.busSchedules
+
+
+day13_part2 ( _, str ) =
+    let
+        sched =
+            str
+                |> String.split ","
+                |> List.indexedMap
+                    (\i s ->
+                        String.toInt s
+                            |> Maybe.map (\n -> ( i, n ))
+                    )
+                |> List.filterMap identity
+
+        max =
+            sched
+                |> List.map Tuple.second
+                |> List.maximum
+    in
+    Maybe.map (\m -> d13b m sched 1) max
+
+
+d13b : Int -> List ( Int, Int ) -> Int -> Int
+d13b departure schedules step =
+    case schedules of
+        ( offset, bus ) :: rest ->
+            if modBy bus (departure + offset) == 0 then
+                d13b departure rest (step * bus)
+
+            else
+                d13b (departure + step) schedules step
+
+        [] ->
+            departure
+
+
+
+--2215
+
+
+day13_part1 ( time, str ) =
+    let
+        sched =
+            str
+                |> String.split ","
+                |> List.filterMap String.toInt
+    in
+    d13 time sched
+
+
+d13 time sched =
+    sched
+        |> List.map (\s -> ( s, firstAfter time s 0 ))
+        |> List.sortBy Tuple.second
+        |> List.head
+        |> Maybe.map (\( bus, delta ) -> bus * delta)
+
+
+firstAfter target bus time =
+    if time > target then
+        time - target
+
+    else
+        firstAfter target bus (time + bus)
+
+
+
+--13a
+--12b 62045
 
 
 day12_part2 =
