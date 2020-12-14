@@ -1,6 +1,6 @@
 module Aoc exposing (..)
 
-import Array
+import Array exposing (Array)
 import Data
 import Dict exposing (Dict)
 import List.Extra as List
@@ -10,7 +10,170 @@ import Set
 
 current : Maybe Int
 current =
-    day13_part2 Data.busSchedules
+    day14_part2 Data.dockingData
+
+
+
+-- 3564822193820
+
+
+day14_part2 data =
+    List.foldl fp2 ( Dict.empty, "" ) data
+        |> Tuple.first
+        |> Dict.values
+        |> List.map fromBinary
+        |> List.sum
+        |> Just
+
+
+fp2 :
+    ( String, String )
+    -> ( Dict Int (Array Int), String )
+    -> ( Dict Int (Array Int), String )
+fp2 ( instr, value ) ( dict, mask_ ) =
+    case ( String.toInt instr, String.toInt value ) of
+        ( Just addr, Just num ) ->
+            let
+                addrs =
+                    getAddrs
+                        (Array.toList <| toBinary addr)
+                        (String.split "" mask_)
+                        [ [] ]
+                        |> List.foldl
+                            (\x xs ->
+                                Dict.insert
+                                    (fromBinary <| Array.fromList x)
+                                    (toBinary num)
+                                    xs
+                            )
+                            dict
+            in
+            ( addrs
+            , mask_
+            )
+
+        _ ->
+            ( dict, value )
+
+
+getAddrs : List Int -> List String -> List (List Int) -> List (List Int)
+getAddrs addr mask_ addrs =
+    case ( addr, mask_ ) of
+        ( x :: xs, y :: ys ) ->
+            case y of
+                "0" ->
+                    -- unchanged
+                    getAddrs xs ys <|
+                        List.map (\a -> a ++ [ x ]) addrs
+
+                "1" ->
+                    -- 1
+                    getAddrs xs ys <|
+                        List.map (\a -> a ++ [ 1 ]) addrs
+
+                _ ->
+                    -- floating
+                    getAddrs xs ys <|
+                        List.concat
+                            [ List.map (\a -> a ++ [ 0 ]) addrs
+                            , List.map (\a -> a ++ [ 1 ]) addrs
+                            ]
+
+        _ ->
+            addrs
+
+
+
+-- 14 / 7997531787333
+
+
+day14_part1 : List ( String, String ) -> Maybe Int
+day14_part1 data =
+    List.foldl
+        (\( instr, value ) ( dict, mask_ ) ->
+            case ( String.toInt instr, String.toInt value ) of
+                ( Just pos, Just n ) ->
+                    ( Dict.insert pos
+                        (mask (toBinary n) mask_)
+                        dict
+                    , mask_
+                    )
+
+                _ ->
+                    -- its a mask
+                    ( dict, value )
+        )
+        ( Dict.empty, "" )
+        data
+        |> Tuple.first
+        |> Dict.values
+        |> List.map fromBinary
+        |> List.sum
+        |> Just
+
+
+mask : Array Int -> String -> Array Int
+mask value mask_ =
+    mask_
+        |> String.split ""
+        |> List.map String.toInt
+        |> List.zip (Array.toList value)
+        |> List.map
+            (\( v, m ) ->
+                m
+                    |> Maybe.map identity
+                    |> Maybe.withDefault v
+            )
+        |> Array.fromList
+
+
+fromBinary : Array Int -> Int
+fromBinary arr =
+    fromBinaryInternal arr (Array.length arr - 1) 0
+
+
+fromBinaryInternal : Array Int -> Int -> Int -> Int
+fromBinaryInternal arr idx res =
+    case Array.get idx arr of
+        Just n ->
+            let
+                m =
+                    case Array.length arr - idx - 1 of
+                        0 ->
+                            1
+
+                        x ->
+                            2 ^ x
+            in
+            fromBinaryInternal
+                arr
+                (idx - 1)
+                ((m * n) + res)
+
+        Nothing ->
+            res
+
+
+toBinary : Int -> Array Int
+toBinary n =
+    toBinaryInternal n (36 - 1) <|
+        Array.initialize 36 (always 0)
+
+
+toBinaryInternal : Int -> Int -> Array Int -> Array Int
+toBinaryInternal n idx arr =
+    if n == 0 then
+        arr
+
+    else
+        toBinaryInternal
+            (n // 2)
+            (idx - 1)
+            (Array.set idx (modBy 2 n) arr)
+
+
+
+--13
 
 
 day13_part2 ( _, str ) =
