@@ -10,10 +10,69 @@ import Set
 
 current : Maybe Int
 current =
-    day14_part2 Data.dockingData
+    Just 42
 
 
 
+-- 62714
+
+
+d15 : Maybe Int
+d15 =
+    let
+        start =
+            [ 2, 0, 1, 9, 5, 19 ]
+    in
+    Just <|
+        day15_part1
+            (start
+                |> List.take (List.length start - 1)
+                |> List.indexedMap (\i n -> ( n, i + 1 ))
+                |> Dict.fromList
+            )
+            (start |> List.reverse |> List.head)
+            (List.length start)
+
+
+
+-- day15 a
+
+
+day15_part1 : Dict Int Int -> Maybe Int -> Int -> Int
+day15_part1 cache lastSpoken_ prevTurn =
+    case lastSpoken_ of
+        Just lastSpoken ->
+            if prevTurn == 30000000 then
+                lastSpoken
+
+            else
+                let
+                    turn =
+                        prevTurn + 1
+                in
+                case Dict.get lastSpoken cache of
+                    Just when ->
+                        let
+                            speak =
+                                (turn - 1) - when
+                        in
+                        day15_part1
+                            (Dict.insert lastSpoken (turn - 1) cache)
+                            (Just speak)
+                            turn
+
+                    Nothing ->
+                        day15_part1
+                            (Dict.insert lastSpoken (turn - 1) cache)
+                            (Just 0)
+                            turn
+
+        _ ->
+            0
+
+
+
+-- 14 b
 -- 3564822193820
 
 
