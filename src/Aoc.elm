@@ -10,7 +10,108 @@ import Set
 
 current : Maybe Int
 current =
-    Just 42
+    d16_b Data.validRanges Data.myTicket Data.nearbyTickets
+
+
+
+-- 16 b
+
+
+d16_b :
+    List ( String, ( ( Int, Int ), ( Int, Int ) ) )
+    -> List Int
+    -> List (List Int)
+    -> Maybe Int
+d16_b validRanges myTicket nearbyTickets_ =
+    let
+        allRanges : List ( Int, Int )
+        allRanges =
+            validRanges
+                |> List.map Tuple.second
+                |> List.concatMap (\( a, b ) -> [ a, b ])
+
+        isFieldInvalid : Int -> Bool
+        isFieldInvalid n =
+            List.all
+                (\( mn, mx ) -> not (n >= mn && n <= mx))
+                allRanges
+
+        nearbyTicketsWithoutInvalid : List (List Int)
+        nearbyTicketsWithoutInvalid =
+            nearbyTickets_
+                |> List.filter (\fields -> not <| List.any isFieldInvalid fields)
+
+        nearbyTicketsByCategory : List (List Int)
+        nearbyTicketsByCategory =
+            nearbyTicketsWithoutInvalid
+                |> List.transpose
+
+        _ =
+            Debug.log "validity" ( List.length nearbyTickets_, List.length nearbyTicketsWithoutInvalid )
+
+        _ =
+            Debug.log "ranges/tix" ( List.length validRanges, List.length nearbyTicketsByCategory )
+
+        assignCats nearby ranges result =
+            case nearby of
+                ( idx, cats ) :: rest ->
+                    let
+                        matches =
+                            List.filter
+                                (\( _, ( ( min1, max1 ), ( min2, max2 ) ) ) ->
+                                    List.all
+                                        (\c -> (c >= min1 && c <= max1) || (c >= min2 && c <= max2))
+                                        cats
+                                )
+                                ranges
+                    in
+                    case matches of
+                        [] ->
+                            Debug.todo "0, really?"
+
+                        [ ( cat, _ ) ] ->
+                            assignCats
+                                rest
+                                (List.filter (Tuple.first >> (/=) cat) ranges)
+                                (Array.set idx cat result)
+
+                        n ->
+                            assignCats
+                                (rest ++ [ ( idx, cats ) ])
+                                ranges
+                                result
+
+                [] ->
+                    result
+
+        assigned : Array String
+        assigned =
+            assignCats
+                (List.indexedMap (\i x -> ( i, x )) nearbyTicketsByCategory)
+                validRanges
+                (Array.initialize (List.length validRanges) (always ""))
+
+        _ =
+            Debug.log "assigned" <| List.zip myTicket <| Array.toList assigned
+    in
+    assigned
+        |> Array.toList
+        |> List.zip myTicket
+        |> List.filter (\( _, cat ) -> String.contains "departure" cat)
+        |> List.map Tuple.first
+        |> List.foldl (*) 1
+        |> Just
+
+
+
+-- 16 / 28882
+
+
+d16_a ranges nearby =
+    nearby
+        |> List.filter (\n -> List.all (\( mn, mx ) -> not (n >= mn && n <= mx)) ranges)
+        |> List.sum
+        |> Just
 
 
 
