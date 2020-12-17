@@ -3,6 +3,8 @@ module Aoc exposing (..)
 import Array exposing (Array)
 import Data
 import Dict exposing (Dict)
+import HyperCube
+import InfiniCube
 import List.Extra as List
 import Regex
 import Set
@@ -10,7 +12,109 @@ import Set
 
 current : Maybe Int
 current =
-    d16_b Data.validRanges Data.myTicket Data.nearbyTickets
+    d17b Data.sat
+
+
+
+-- 17b  /1680
+
+
+d17b sat =
+    let
+        cube =
+            HyperCube.initialize sat
+    in
+    List.range 1 6
+        |> List.foldl
+            (\_ c ->
+                HyperCube.mapNeighbours
+                    (\( k, maybeValue ) n ->
+                        let
+                            num =
+                                n
+                                    |> List.filter (Tuple.second >> (==) (Just "#"))
+                                    |> List.length
+                        in
+                        case maybeValue of
+                            Just "#" ->
+                                if num == 2 || num == 3 then
+                                    Just ( k, "#" )
+
+                                else
+                                    Nothing
+
+                            _ ->
+                                if num == 3 then
+                                    Just ( k, "#" )
+
+                                else
+                                    Nothing
+                    )
+                    c
+            )
+            cube
+        |> HyperCube.values
+        |> List.filterMap
+            (\v ->
+                if v == "#" then
+                    Just "#"
+
+                else
+                    Nothing
+            )
+        |> List.length
+        |> Just
+
+
+
+-- 17a
+
+
+d17a sat =
+    let
+        cube =
+            InfiniCube.initialize sat
+    in
+    List.range 1 6
+        |> List.foldl
+            (\_ c ->
+                InfiniCube.mapNeighbours
+                    (\( k, maybeValue ) n ->
+                        let
+                            num =
+                                n
+                                    |> List.filter (Tuple.second >> (==) (Just "#"))
+                                    |> List.length
+                        in
+                        case maybeValue of
+                            Just "#" ->
+                                if num == 2 || num == 3 then
+                                    Just ( k, "#" )
+
+                                else
+                                    Nothing
+
+                            _ ->
+                                if num == 3 then
+                                    Just ( k, "#" )
+
+                                else
+                                    Nothing
+                    )
+                    c
+            )
+            cube
+        |> InfiniCube.values
+        |> List.filterMap
+            (\v ->
+                if v == "#" then
+                    Just "#"
+
+                else
+                    Nothing
+            )
+        |> List.length
+        |> Just
 
 
 
