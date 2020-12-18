@@ -6,13 +6,63 @@ import Dict exposing (Dict)
 import HyperCube
 import InfiniCube
 import List.Extra as List
+import Parser exposing ((|.), (|=), Parser, end, int, succeed, symbol)
+import Pratt exposing (infixLeft, literal)
 import Regex
 import Set
 
 
 current : Maybe Int
 current =
-    d17b Data.sat
+    d18a Data.homework
+
+
+
+-- 18a
+
+
+d18a str =
+    str
+        |> Regex.split splitLines
+        |> List.filterMap parse
+        |> List.sum
+        |> Just
+
+
+mathExpression : Parser Int
+mathExpression =
+    Pratt.expression
+        { oneOf =
+            [ literal int
+            , parenthesizedExpression
+            ]
+        , andThenOneOf =
+            [ infixLeft 2 (symbol "+") (+)
+            , infixLeft 1 (symbol "*") (*)
+            ]
+        , spaces = Parser.spaces
+        }
+
+
+parenthesizedExpression : Pratt.Config Int -> Parser Int
+parenthesizedExpression config =
+    succeed identity
+        |. symbol "("
+        |= Pratt.subExpression 0 config
+        |. symbol ")"
+
+
+parser : Parser Int
+parser =
+    succeed identity
+        |= mathExpression
+        |. end
+
+
+parse : String -> Maybe Int
+parse expr =
+    Parser.run parser expr
+        |> Result.toMaybe
 
 
 
@@ -1450,7 +1500,7 @@ day4_part2 =
 
 
 splitLines =
-    Regex.fromStringWith { caseInsensitive = True, multiline = True } "\\n\\s*\\n"
+    Regex.fromStringWith { caseInsensitive = True, multiline = True } "\\n"
         |> Maybe.withDefault Regex.never
 
 

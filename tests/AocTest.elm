@@ -13,5 +13,5 @@ suite =
             \_ ->
                 Expect.equal
                     Aoc.current
-                    (Just 848)
+                    (Just 15285807527593)
         ]
