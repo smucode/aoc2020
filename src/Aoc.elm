@@ -14,7 +14,91 @@ import Set
 
 current : Maybe Int
 current =
-    d18a Data.homework
+    d19a Data.rules Data.messages
+
+
+
+-- 19
+
+
+d19a rules_ messages_ =
+    let
+        rules : Dict Int (List (List String))
+        rules =
+            rules_
+                |> Regex.split splitLines
+                |> List.map (String.trim >> String.split ":")
+                |> List.filterMap
+                    (\parts ->
+                        case parts of
+                            [ k, v ] ->
+                                k
+                                    |> String.toInt
+                                    |> Maybe.map (\n -> ( n, String.trim v ))
+
+                            _ ->
+                                Nothing
+                    )
+                |> List.map
+                    (\( k, v ) ->
+                        ( k
+                        , v
+                            |> String.split "|"
+                            |> List.map (String.trim >> String.split " ")
+                        )
+                    )
+                |> Dict.fromList
+
+        expand : Int -> List (List String) -> String
+        expand depth values =
+            if depth > 20 then
+                ""
+
+            else
+                values
+                    |> List.map
+                        (List.map
+                            (\v ->
+                                case String.toInt v of
+                                    Just n ->
+                                        rules
+                                            |> Dict.get n
+                                            |> Maybe.map (expand <| depth + 1)
+                                            |> Maybe.withDefault ""
+
+                                    Nothing ->
+                                        v |> String.replace "\"" ""
+                            )
+                            >> String.join ""
+                        )
+                    |> String.join "|"
+                    |> (\x ->
+                            if List.length values > 1 then
+                                "(" ++ x ++ ")"
+
+                            else
+                                x
+                       )
+
+        messages =
+            messages_
+                |> Regex.split splitLines
+                |> List.map String.trim
+
+        regex =
+            rules
+                |> Dict.get 0
+                |> Maybe.map (expand 0)
+                |> Maybe.map (\x -> "^(" ++ x ++ ")$")
+    in
+    regex
+        |> Maybe.andThen Regex.fromString
+        |> Maybe.map
+            (\re ->
+                messages
+                    |> List.filter (Regex.contains re)
+                    |> List.length
+            )
 
 
 
