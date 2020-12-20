@@ -14,7 +14,90 @@ import Set
 
 current : Maybe Int
 current =
-    d19a Data.rules Data.messages
+    d20a Data.satImg
+
+
+
+-- 20
+
+
+d20a data =
+    let
+        tiles : List ( Int, List String )
+        tiles =
+            d20parser data
+
+        edges : List ( Int, List String )
+        edges =
+            tiles
+                |> List.map (Tuple.mapSecond getSides)
+                |> Debug.log "EDDGES"
+
+        neighbors : List ( Int, List String )
+        neighbors =
+            edges
+                |> List.map
+                    (\( k, es ) ->
+                        ( k
+                        , es
+                            |> List.filter
+                                (\e ->
+                                    List.any
+                                        (\( k2, es2 ) ->
+                                            k2 /= k && (List.member e es2 || List.member (String.reverse e) es2)
+                                        )
+                                        edges
+                                )
+                        )
+                    )
+    in
+    neighbors
+        |> List.filter (\( k, es ) -> List.length es == 2)
+        |> List.map Tuple.first
+        |> List.foldl (*) 1
+        |> Just
+
+
+getSides : List String -> List String
+getSides tile =
+    let
+        transposed =
+            tile
+                |> List.map (String.split "")
+                |> List.transpose
+                |> List.map (String.join "")
+    in
+    List.filterMap identity
+        [ List.head transposed |> Maybe.map String.reverse
+        , List.head tile
+        , List.head (List.reverse transposed)
+        , List.head (List.reverse tile) |> Maybe.map String.reverse
+        ]
+
+
+splitDoubleNewline =
+    Regex.fromString "\\n\\n"
+        |> Maybe.withDefault Regex.never
+
+
+d20parser : String -> List ( Int, List String )
+d20parser data =
+    data
+        |> Regex.split splitDoubleNewline
+        |> List.map (Regex.split splitLines)
+        |> List.filterMap
+            (\strs ->
+                case strs of
+                    first :: rest ->
+                        first
+                            |> String.replace "Tile " ""
+                            |> String.replace ":" ""
+                            |> String.toInt
+                            |> Maybe.map (\id -> ( id, rest ))
+
+                    _ ->
+                        Nothing
+            )
 
 
 
