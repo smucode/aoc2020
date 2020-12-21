@@ -14,7 +14,113 @@ import Set
 
 current : Maybe Int
 current =
-    d20a Data.satImg
+    d21a Data.foods
+
+
+
+-- 21
+
+
+d21a foods_ =
+    let
+        foods =
+            foods_
+                |> Regex.split splitLines
+                |> List.map (String.split "(contains")
+                |> List.filterMap
+                    (\l ->
+                        case l of
+                            [ ing, alg ] ->
+                                Just
+                                    ( ing
+                                        |> String.trim
+                                        |> String.split " "
+                                        |> List.map String.trim
+                                    , alg
+                                        |> String.trim
+                                        |> String.replace ")" ""
+                                        |> String.split ", "
+                                    )
+
+                            _ ->
+                                Nothing
+                    )
+
+        --|> Debug.log "parsed"
+        allergens =
+            foods
+                |> List.concatMap Tuple.second
+                |> List.unique
+
+        ingredients =
+            foods
+                |> List.concatMap Tuple.first
+
+        --|> Debug.log "allergens"
+        byAllergen : List ( String, List String )
+        byAllergen =
+            allergens
+                |> List.map
+                    (\allergen ->
+                        foods
+                            |> List.filterMap
+                                (\( f, a ) ->
+                                    if List.member allergen a then
+                                        Just <| Set.fromList f
+
+                                    else
+                                        Nothing
+                                )
+                            |> (\l ->
+                                    case l of
+                                        [] ->
+                                            Set.empty
+
+                                        [ a ] ->
+                                            a
+
+                                        a :: as_ ->
+                                            List.foldl Set.intersect a as_
+                               )
+                            |> Set.toList
+                            |> Tuple.pair allergen
+                    )
+                |> Debug.log "byAllergen"
+
+        uniqueByAllergenHelp byAllergen_ ided =
+            case byAllergen_ of
+                [] ->
+                    ided
+
+                ( x, [ y ] ) :: xs ->
+                    uniqueByAllergenHelp
+                        (xs |> List.map (Tuple.mapSecond (List.filter ((/=) y))))
+                        (( x, y ) :: ided)
+
+                x :: xs ->
+                    uniqueByAllergenHelp (xs ++ [ x ]) <| ided
+
+        uniqueByAllergen =
+            uniqueByAllergenHelp byAllergen []
+                |> Debug.log "uniqueByAllergen"
+
+        withAllergens =
+            byAllergen
+                |> List.concatMap Tuple.second
+                |> Debug.log "with allergens"
+
+        noAllergens =
+            ingredients
+                |> List.filter (\x -> not <| List.member x withAllergens)
+
+        --|> Debug.log "no allergens"
+    in
+    uniqueByAllergen
+        |> List.sortBy Tuple.first
+        |> List.map Tuple.second
+        |> String.join ","
+        |> Debug.log "RESULT"
+        |> always (Just 21)
 
 
 
