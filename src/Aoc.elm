@@ -14,7 +14,72 @@ import Set
 
 current : Maybe Int
 current =
-    d21a Data.foods
+    d22a Data.combat
+
+
+
+-- d22a
+
+
+d22a cards_ =
+    let
+        cards =
+            cards_
+                |> Regex.split splitDoubleNewline
+                |> (\x ->
+                        case x of
+                            [ p1, p2 ] ->
+                                ( p1
+                                    |> Regex.split splitLines
+                                    |> List.drop 1
+                                    |> List.filterMap String.toInt
+                                , p2
+                                    |> Regex.split splitLines
+                                    |> List.drop 1
+                                    |> List.filterMap String.toInt
+                                )
+
+                            _ ->
+                                ( [], [] )
+                   )
+
+        playRound (( d1, d2 ) as decks) cache =
+            if Dict.member decks cache then
+                ( d1 ++ d2, [] )
+
+            else
+                let
+                    updatedCache =
+                        Dict.insert decks () cache
+                in
+                case decks of
+                    ( p1Card :: p1Deck, p2Card :: p2Deck ) ->
+                        if List.length p1Deck >= p1Card && List.length p2Deck >= p2Card then
+                            case playRound ( List.take p1Card p1Deck, List.take p2Card p2Deck ) Dict.empty of
+                                ( _, [] ) ->
+                                    playRound ( p1Deck ++ [ p1Card, p2Card ], p2Deck ) updatedCache
+
+                                ( [], _ ) ->
+                                    playRound ( p1Deck, p2Deck ++ [ p2Card, p1Card ] ) updatedCache
+
+                                _ ->
+                                    Debug.todo "💥"
+
+                        else if p1Card > p2Card then
+                            playRound ( p1Deck ++ [ p1Card, p2Card ], p2Deck ) updatedCache
+
+                        else
+                            playRound ( p1Deck, p2Deck ++ [ p2Card, p1Card ] ) updatedCache
+
+                    _ ->
+                        decks
+    in
+    playRound cards Dict.empty
+        |> (\( a, b ) -> a ++ b)
+        |> List.reverse
+        |> List.indexedMap (\i a -> (i + 1) * a)
+        |> List.sum
+        |> Just
 
 
 
