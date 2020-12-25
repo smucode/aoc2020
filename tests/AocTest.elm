@@ -12,6 +12,6 @@ suite =
         [ test "puzzle" <|
             \_ ->
                 Expect.equal
-                    (Just 10)
+                    (Just 2679568)
                     Aoc.current
         ]

@@ -12,12 +12,41 @@ import Regex
 import Set
 
 
+
+--1717001
+--523731
+
+
 current : Maybe Int
 current =
-    d24 Data.tilesSample
+    Just <| d25 1717001 523731 1 1
 
 
 
+-- 25
+
+
+d25 : Int -> Int -> Int -> Int -> Int
+d25 card door target key =
+    if target == door then
+        key
+
+    else
+        d25 1717001
+            523731
+            (modBy 20201227 (target * 7))
+            (modBy 20201227 (key * card))
+
+
+
+--while (target !== door) {
+--  target = (target * 7) % 20201227;
+--  key = (key * card) % 20201227;
+--}
+
+
+
+--console.log(key)
 -- d24
 
 
