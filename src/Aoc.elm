@@ -14,7 +14,74 @@ import Set
 
 current : Maybe Int
 current =
-    d22a Data.combat
+    d24 Data.tilesSample
+
+
+
+-- d24
+
+
+d24 : String -> Maybe Int
+d24 =
+    Regex.split splitLines
+        >> d24Int
+
+
+d24Int : List String -> Maybe Int
+d24Int tiles_ =
+    tiles_
+        |> List.foldl (\x xs -> move (String.split "" x) ( 0, 0 ) xs) Dict.empty
+        |> (\t ->
+                List.range 1 100
+                    |> List.foldl
+                        (\_ tiles ->
+                            tiles
+                        )
+                        t
+           )
+        |> Dict.values
+        |> List.count ((==) Black)
+        |> Just
+
+
+type Color
+    = Black
+
+
+move : List String -> ( Int, Int ) -> Dict ( Int, Int ) Color -> Dict ( Int, Int ) Color
+move str ( x, y ) dict =
+    case str of
+        [] ->
+            Dict.update ( x, y )
+                (\v ->
+                    if v == Just Black then
+                        Nothing
+
+                    else
+                        Just Black
+                )
+                dict
+
+        "e" :: rest ->
+            move rest ( x + 1, y ) dict
+
+        "s" :: "e" :: rest ->
+            move rest ( x, y - 1 ) dict
+
+        "s" :: "w" :: rest ->
+            move rest ( x - 1, y - 1 ) dict
+
+        "w" :: rest ->
+            move rest ( x - 1, y ) dict
+
+        "n" :: "w" :: rest ->
+            move rest ( x, y + 1 ) dict
+
+        "n" :: "e" :: rest ->
+            move rest ( x + 1, y + 1 ) dict
+
+        _ ->
+            Debug.todo "💥"
 
 
 
